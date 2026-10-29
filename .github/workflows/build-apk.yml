@@ -22,15 +22,22 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Android SDK Licenses
+      # ✅ 换更稳的安卓SDK安装方式，避开之前反复出错的授权
+      - name: Install Android SDK and accept licenses
         run: |
-          yes | sdkmanager --licenses
-
-      - name: Install Android SDK
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          sudo apt update
+          sudo apt install -y unzip
+          # 自动同意许可，不再单独用yes | sdkmanager --licenses（这个很容易卡死）
+          mkdir -p ~/.android
+          echo "24333f8a63b6825ea9c5514f83c2829b004d1fb4" > ~/.android/repositories.cfg
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -q commandlinetools-linux-9477386_latest.zip -d cmdline-tools
+          sudo mkdir -p /opt/android-sdk/cmdline-tools/latest
+          sudo mv cmdline-tools/cmdline-tools/* /opt/android-sdk/cmdline-tools/latest/
+          export ANDROID_HOME=/opt/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          sdkmanager --update
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Extract project ZIP
         shell: bash
